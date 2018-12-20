@@ -18,15 +18,15 @@ module Rfd
     Curses.init_screen
     Curses.raw
     Curses.noecho
-    Curses.curs_set 0
+    Curses.curs_set(0)
     Curses.stdscr.keypad = true
     Curses.start_color
 
     [Curses::COLOR_WHITE, Curses::COLOR_CYAN, Curses::COLOR_MAGENTA, Curses::COLOR_GREEN, Curses::COLOR_RED].each do |c|
-      Curses.init_pair c, c, Curses::COLOR_BLACK
+      Curses.init_pair(c, c, Curses::COLOR_BLACK)
     end
 
-    Curses.mousemask Curses::BUTTON1_CLICKED | Curses::BUTTON1_DOUBLE_CLICKED
+    Curses.mousemask(Curses::BUTTON1_CLICKED | Curses::BUTTON1_DOUBLE_CLICKED)
   end
 
   # Start the app here!
@@ -38,7 +38,7 @@ module Rfd
     Rfd::Window.draw_borders
     Curses.stdscr.noutrefresh
     rfd = Rfd::Controller.new
-    rfd.cd dir
+    rfd.cd(dir)
     Curses.doupdate
     rfd
   end
@@ -86,34 +86,34 @@ module Rfd
             l
           when Curses::KEY_CTRL_A..Curses::KEY_CTRL_Z
             chr = ((c - 1 + 65) ^ 0b0100000).chr
-            public_send "ctrl_#{chr}" if respond_to?("ctrl_#{chr}")
+            public_send("ctrl_#{chr}") if respond_to?("ctrl_#{chr}")
           when ?0..?9
-            public_send c
+            public_send(c)
             number_pressed = true
           when ?!..?~
-            if respond_to? c
-              public_send c
+            if respond_to?(c)
+              public_send(c)
             else
-              debug "key: #{c}" if ENV["DEBUG"]
+              debug("key: #{c}") if ENV["DEBUG"]
             end
           when Curses::KEY_MOUSE
             if (mouse_event = Curses.getmouse)
               case mouse_event.bstate
               when Curses::BUTTON1_CLICKED
-                click y: mouse_event.y, x: mouse_event.x
+                click(y: mouse_event.y, x: mouse_event.x)
               when Curses::BUTTON1_DOUBLE_CLICKED
-                double_click y: mouse_event.y, x: mouse_event.x
+                double_click(y: mouse_event.y, x: mouse_event.x)
               end
             end
           else
-            debug "key: #{c}" if ENV["DEBUG"]
+            debug("key: #{c}") if ENV["DEBUG"]
           end
           Curses.doupdate if ret
           @times = nil unless number_pressed
         rescue StopIteration
           raise
         rescue => e
-          command_line.show_error e.to_s
+          command_line.show_error(e.to_s)
           raise if ENV["DEBUG"]
         end
       end
@@ -156,29 +156,29 @@ module Rfd
     def move_cursor(row = nil)
       if row
         if (prev_item = items[current_row])
-          main.draw_item prev_item
+          main.draw_item(prev_item)
         end
         page = row / max_items
-        switch_page page if page != current_page
-        main.activate_pane row / maxy
+        switch_page(page) if page != current_page
+        main.activate_pane(row / maxy)
         @current_row = row
       else
         @current_row = 0
       end
 
       item = items[current_row]
-      main.draw_item item, current: true
-      main.display current_page
+      main.draw_item(item, current: true)
+      main.display(current_page)
 
-      header_l.draw_current_file_info item
+      header_l.draw_current_file_info(item)
       @current_row
     end
 
     # Change the current directory.
     def cd(dir = "~", pushd: true)
-      dir = load_item path: expand_path(dir) unless dir.is_a? Item
+      dir = load_item(path: expand_path(dir)) unless dir.is_a? Item
       unless dir.zip?
-        Dir.chdir dir
+        Dir.chdir(dir)
         @current_zip = nil
       else
         @current_zip = dir
@@ -187,14 +187,14 @@ module Rfd
       @current_dir = dir
       @current_page = 0
       @current_row = nil
-      main.activate_pane 0
+      main.activate_pane(0)
       ls
       @current_dir
     end
 
     # cd to the previous directory.
     def popd
-      cd @dir_history.pop, pushd: false if @dir_history.any?
+      cd(@dir_history.pop, pushd: false) if @dir_history.any?
     end
 
     # Fetch files from current directory.
@@ -205,7 +205,7 @@ module Rfd
 
       @current_page ||= 0
       draw_items
-      move_cursor (current_row ? [current_row, items.size - 1].min : nil)
+      move_cursor(current_row ? [current_row, items.size - 1].min : nil)
 
       draw_marked_items
       draw_total_items
@@ -232,8 +232,8 @@ module Rfd
       @direction = direction
       @current_page = 0
       sort_items_according_to_current_direction
-      switch_page 0
-      move_cursor 0
+      switch_page(0)
+      move_cursor(0)
     end
 
     # Change the file permission of the selected files and directories.
@@ -247,7 +247,7 @@ module Rfd
         mode = Integer mode.size == 3 ? "0#{mode}" : mode
       rescue ArgumentError
       end
-      FileUtils.chmod mode, selected_items.map(&:path)
+      FileUtils.chmod(mode, selected_items.map(&:path))
       ls
     end
 
@@ -258,7 +258,7 @@ module Rfd
     def chown(user_and_group)
       return unless user_and_group
       user, group = user_and_group.split(":").map {|s| s == "" ? nil : s}
-      FileUtils.chown user, group, selected_items.map(&:path)
+      FileUtils.chown(user, group, selected_items.map(&:path))
       ls
     end
 
@@ -266,15 +266,15 @@ module Rfd
     def fetch_items_from_filesystem_or_zip
       unless in_zip?
         @items = Dir.foreach(current_dir).map {|fn|
-          load_item dir: current_dir, name: fn
+          load_item(dir: current_dir, name: fn)
         }.to_a.partition {|i| %w(. ..).include? i.name}.flatten
       else
         @items = [load_item(dir: current_dir, name: ".", stat: File.stat(current_dir)),
           load_item(dir: current_dir, name: "..", stat: File.stat(File.dirname(current_dir)))]
-        zf = Zip::File.new current_dir
+        zf = Zip::File.new(current_dir)
         zf.each {|entry|
           next if entry.name_is_directory?
-          stat = zf.file.stat entry.name
+          stat = zf.file.stat(entry.name)
           @items << load_item(dir: current_dir, name: entry.name, stat: stat)
         }
       end
@@ -283,13 +283,13 @@ module Rfd
     # Focus at the first file or directory of which name starts with the given String.
     def find(str)
       index = items.index {|i| i.index > current_row && i.name.start_with?(str)} || items.index {|i| i.name.start_with? str}
-      move_cursor index if index
+      move_cursor(index) if index
     end
 
     # Focus at the last file or directory of which name starts with the given String.
     def find_reverse(str)
       index = items.reverse.index {|i| i.index < current_row && i.name.start_with?(str)} || items.reverse.index {|i| i.name.start_with? str}
-      move_cursor items.size - index - 1 if index
+      move_cursor(items.size - index - 1) if index
     end
 
     # Height of the currently active pane.
@@ -304,10 +304,10 @@ module Rfd
 
     # Update the main window with the loaded files and directories. Also update the header.
     def draw_items
-      main.newpad items
+      main.newpad(items)
       @displayed_items = items[current_page * max_items, max_items]
-      main.display current_page
-      header_l.draw_path_and_page_number path: current_dir.path, current: current_page + 1, total: total_pages
+      main.display(current_page)
+      header_l.draw_path_and_page_number(path: current_dir.path, current: current_page + 1, total: total_pages)
     end
 
     # Sort the loaded files and directories in already given sort order.
@@ -356,15 +356,15 @@ module Rfd
       sort_items_according_to_current_direction
       draw_items
       draw_total_items
-      switch_page 0
-      move_cursor 0
+      switch_page(0)
+      move_cursor(0)
     end
 
     # Copy selected files and directories to the destination.
     def cp(dest)
       unless in_zip?
         src = (m = marked_items).any? ? m.map(&:path) : current_item
-        FileUtils.cp_r src, expand_path(dest)
+        FileUtils.cp_r(src, expand_path(dest))
       else
         raise "cping multiple items in .zip is not supported." if selected_items.size > 1
         Zip::File.open(current_zip) do |zip|
@@ -381,10 +381,10 @@ module Rfd
     def mv(dest)
       unless in_zip?
         src = (m = marked_items).any? ? m.map(&:path) : current_item
-        FileUtils.mv src, expand_path(dest)
+        FileUtils.mv(src, expand_path(dest))
       else
         raise "mving multiple items in .zip is not supported." if selected_items.size > 1
-        rename "#{selected_items.first.name}/#{dest}"
+        rename("#{selected_items.first.name}/#{dest}")
       end
       ls
     end
@@ -403,14 +403,14 @@ module Rfd
       end
       unless in_zip?
         selected_items.each do |item|
-          name = item.name.gsub from, to
-          FileUtils.mv item, current_dir.join(name) if item.name != name
+          name = item.name.gsub(from, to)
+          FileUtils.mv(item, current_dir.join(name)) if item.name != name
         end
       else
         Zip::File.open(current_zip) do |zip|
           selected_items.each do |item|
-            name = item.name.gsub from, to
-            zip.rename item.name, name
+            name = item.name.gsub(from, to)
+            zip.rename(item.name, name)
           end
         end
       end
@@ -423,13 +423,13 @@ module Rfd
     def trash
       unless in_zip?
         if osx?
-          FileUtils.mv selected_items.map(&:path), File.expand_path("~/.Trash/")
+          FileUtils.mv(selected_items.map(&:path), File.expand_path("~/.Trash/"))
         else
           #TODO support other OS
-          FileUtils.rm_rf selected_items.map(&:path)
+          FileUtils.rm_rf(selected_items.map(&:path))
         end
       else
-        return unless ask %Q[Trashing zip entries is not supported. Actually the files will be deleted. Are you sure want to proceed? (y/n)]
+        return unless ask(%Q[Trashing zip entries is not supported. Actually the files will be deleted. Are you sure want to proceed? (y/n)])
         delete
       end
       @current_row -= selected_items.count {|i| i.index <= current_row}
@@ -439,14 +439,14 @@ module Rfd
     # Delete selected files and directories.
     def delete
       unless in_zip?
-        FileUtils.rm_rf selected_items.map(&:path)
+        FileUtils.rm_rf(selected_items.map(&:path))
       else
         Zip::File.open(current_zip) do |zip|
           zip.select {|e| selected_items.map(&:name).include? e.to_s}.each do |entry|
             if entry.name_is_directory?
-              zip.dir.delete entry.to_s
+              zip.dir.delete(entry.to_s)
             else
-              zip.file.delete entry.to_s
+              zip.file.delete(entry.to_s)
             end
           end
         end
@@ -458,10 +458,10 @@ module Rfd
     # Create a new directory.
     def mkdir(dir)
       unless in_zip?
-        FileUtils.mkdir_p current_dir.join(dir)
+        FileUtils.mkdir_p(current_dir.join(dir))
       else
         Zip::File.open(current_zip) do |zip|
-          zip.dir.mkdir dir
+          zip.dir.mkdir(dir)
         end
       end
       ls
@@ -470,7 +470,7 @@ module Rfd
     # Create a new empty file.
     def touch(filename)
       unless in_zip?
-        FileUtils.touch current_dir.join(filename)
+        FileUtils.touch(current_dir.join(filename))
       else
         Zip::File.open(current_zip) do |zip|
           # zip.file.open(filename, "w") {|_f| }  #HAXX this code creates an unneeded temporary file
@@ -482,7 +482,7 @@ module Rfd
 
     # Create a symlink to the current file or directory.
     def symlink(name)
-      FileUtils.ln_s current_item, name
+      FileUtils.ln_s(current_item, name)
       ls
     end
 
@@ -495,18 +495,18 @@ module Rfd
     def paste
       if @yanked_items
         if current_item.directory?
-          FileUtils.cp_r @yanked_items.map(&:path), current_item
+          FileUtils.cp_r(@yanked_items.map(&:path), current_item)
         else
           @yanked_items.each do |item|
-            if items.include? item
+            if items.include?(item)
               i = 1
               while i += 1
-                new_item = load_item dir: current_dir, name: "#{item.basename}_#{i}#{item.extname}", stat: item.stat
-                break unless File.exist? new_item.path
+                new_item = load_item(dir: current_dir, name: "#{item.basename}_#{i}#{item.extname}", stat: item.stat)
+                break unless File.exist?(new_item.path)
               end
-              FileUtils.cp_r item, new_item
+              FileUtils.cp_r(item, new_item)
             else
-              FileUtils.cp_r item, current_dir
+              FileUtils.cp_r(item, current_dir)
             end
           end
         end
@@ -529,10 +529,10 @@ module Rfd
           next if item.symlink?
           if item.directory?
             Dir[item.join("**/**")].each do |file|
-              zipfile.add file.sub("#{current_dir}/", ""), file
+              zipfile.add(file.sub("#{current_dir}/", ""), file)
             end
           else
-            zipfile.add item.name, item
+            zipfile.add(item.name, item)
           end
         end
       end
@@ -544,10 +544,10 @@ module Rfd
       unless in_zip?
         zips, gzs = selected_items.partition(&:zip?).tap {|z, others| break [z, *others.partition(&:gz?)]}
         zips.each do |item|
-          FileUtils.mkdir_p current_dir.join(item.basename)
+          FileUtils.mkdir_p(current_dir.join(item.basename))
           Zip::File.open(item) do |zip|
             zip.each do |entry|
-              FileUtils.mkdir_p File.join(item.basename, File.dirname(entry.to_s))
+              FileUtils.mkdir_p(File.join(item.basename, File.dirname(entry.to_s)))
               zip.extract(entry, File.join(item.basename, entry.to_s)) { true }
             end
           end
@@ -555,26 +555,26 @@ module Rfd
         gzs.each do |item|
           Zlib::GzipReader.open(item) do |gz|
             Gem::Package::TarReader.new(gz) do |tar|
-              dest_dir = current_dir.join (gz.orig_name || item.basename).sub(/\.tar$/, "")
+              dest_dir = current_dir.join((gz.orig_name || item.basename).sub(/\.tar$/, ""))
               tar.each do |entry|
                 dest = nil
                 if entry.full_name == "././@LongLink"
-                  dest = File.join dest_dir, entry.read.strip
+                  dest = File.join(dest_dir, entry.read.strip)
                   next
                 end
-                dest ||= File.join dest_dir, entry.full_name
+                dest ||= File.join(dest_dir, entry.full_name)
                 if entry.directory?
-                  FileUtils.mkdir_p dest, :mode => entry.header.mode
+                  FileUtils.mkdir_p(dest, :mode => entry.header.mode)
                 elsif entry.file?
-                  FileUtils.mkdir_p dest_dir
+                  FileUtils.mkdir_p(dest_dir)
                   File.open(dest, "wb") {|f| f.print entry.read}
-                  FileUtils.chmod entry.header.mode, dest
+                  FileUtils.chmod(entry.header.mode, dest)
                 elsif entry.header.typeflag == "2"  # symlink
-                  File.symlink entry.header.linkname, dest
+                  File.symlink(entry.header.linkname, dest)
                 end
-                unless Dir.exist? dest_dir
-                  FileUtils.mkdir_p dest_dir
-                  File.open(File.join(dest_dir, gz.orig_name || item.basename), "wb") {|f| f.print gz.read}
+                unless Dir.exist?(dest_dir)
+                  FileUtils.mkdir_p(dest_dir)
+                  File.open(File.join(dest_dir, gz.orig_name || item.basename), "wb") {|f| f.print(gz.read)}
                 end
               end
             end
@@ -582,8 +582,8 @@ module Rfd
         end
       else
         Zip::File.open(current_zip) do |zip|
-          zip.select {|e| selected_items.map(&:name).include? e.to_s}.each do |entry|
-            FileUtils.mkdir_p File.join(current_zip.dir, current_zip.basename, File.dirname(entry.to_s))
+          zip.select {|e| selected_items.map(&:name).include?(e.to_s)}.each do |entry|
+            FileUtils.mkdir_p(File.join(current_zip.dir, current_zip.basename, File.dirname(entry.to_s)))
             zip.extract(entry, File.join(current_zip.dir, current_zip.basename, entry.to_s)) { true }
           end
         end
@@ -611,25 +611,25 @@ module Rfd
     # ==== Parameters
     # * +page+ - Target page number
     def switch_page(page)
-      main.display (@current_page = page)
+      main.display(@current_page = page)
       @displayed_items = items[current_page * max_items, max_items]
-      header_l.draw_path_and_page_number path: current_dir.path, current: current_page + 1, total: total_pages
+      header_l.draw_path_and_page_number(path: current_dir.path, current: current_page + 1, total: total_pages)
     end
 
     # Update the header information concerning currently marked files or directories.
     def draw_marked_items
       items = marked_items
-      header_r.draw_marked_items count: items.size, size: items.inject(0) {|sum, i| sum += i.size}
+      header_r.draw_marked_items(count: items.size, size: items.inject(0) {|sum, i| sum += i.size})
     end
 
     # Update the header information concerning total files and directories in the current directory.
     def draw_total_items
-      header_r.draw_total_items count: items.size, size: items.inject(0) {|sum, i| sum += i.size}
+      header_r.draw_total_items(count: items.size, size: items.inject(0) {|sum, i| sum += i.size})
     end
 
     # Swktch on / off marking on the current file or directory.
     def toggle_mark
-      main.toggle_mark current_item
+      main.toggle_mark(current_item)
     end
 
     # Get a char as a String from user input.
@@ -639,7 +639,7 @@ module Rfd
     end
 
     def clear_command_line
-      command_line.writeln 0, ""
+      command_line.writeln(0, "")
       command_line.clear
       command_line.noutrefresh
     end
@@ -650,10 +650,10 @@ module Rfd
     # * +preset_command+ - A command that would be displayed at the command line before user input.
     def process_command_line(preset_command: nil)
       prompt = preset_command ? ":#{preset_command} " : ":"
-      command_line.set_prompt prompt
+      command_line.set_prompt(prompt)
       cmd, *args = command_line.get_command(prompt: prompt).split(" ")
       if cmd && !cmd.empty? && respond_to?(cmd)
-        ret = self.public_send cmd, *args
+        ret = self.public_send(cmd, *args)
         clear_command_line
         ret
       end
@@ -663,10 +663,10 @@ module Rfd
 
     # Accept user input, and directly execute it in an external shell.
     def process_shell_command
-      command_line.set_prompt ":!"
+      command_line.set_prompt(":!")
       cmd = command_line.get_command(prompt: ":!")[1..-1]
-      execute_external_command pause: true do
-        system cmd
+      execute_external_command(pause: true) do
+        system(cmd)
       end
     rescue Interrupt
     ensure
@@ -679,10 +679,10 @@ module Rfd
     # ==== Parameters
     # * +prompt+ - Prompt message
     def ask(prompt = "(y/n)")
-      command_line.set_prompt prompt
+      command_line.set_prompt(prompt)
       command_line.refresh
       while (c = Curses.getch)
-        next unless [?N, ?Y, ?n, ?y, 3, 27] .include? c  # N, Y, n, y, ^c, esc
+        next unless [?N, ?Y, ?n, ?y, 3, 27] .include?(c)  # N, Y, n, y, ^c, esc
         command_line.clear
         command_line.noutrefresh
         break (c == "y") || (c == "Y")
@@ -701,15 +701,15 @@ module Rfd
             tmpfile_name = nil
             Zip::File.open(current_zip) do |zip|
               tmpdir = Dir.mktmpdir
-              FileUtils.mkdir_p File.join(tmpdir, File.dirname(current_item.name))
+              FileUtils.mkdir_p(File.join(tmpdir, File.dirname(current_item.name)))
               tmpfile_name = File.join(tmpdir, current_item.name)
               File.open(tmpfile_name, "w") {|f| f.puts zip.file.read(current_item.name)}
-              system %Q[#{editor} "#{tmpfile_name}"]
+              system(%Q[#{editor} "#{tmpfile_name}"])
               zip.add(current_item.name, tmpfile_name) { true }
             end
             ls
           ensure
-            FileUtils.remove_entry_secure tmpdir if tmpdir
+            FileUtils.remove_entry_secure(tmpdir) if tmpdir
           end
         end
       end
@@ -720,19 +720,19 @@ module Rfd
       pager = ENV["PAGER"] || "less"
       execute_external_command do
         unless in_zip?
-          system %Q[#{pager} "#{current_item.path}"]
+          system(%Q[#{pager} "#{current_item.path}"])
         else
           begin
             tmpdir, tmpfile_name = nil
             Zip::File.open(current_zip) do |zip|
               tmpdir = Dir.mktmpdir
-              FileUtils.mkdir_p File.join(tmpdir, File.dirname(current_item.name))
+              FileUtils.mkdir_p(File.join(tmpdir, File.dirname(current_item.name)))
               tmpfile_name = File.join(tmpdir, current_item.name)
-              File.open(tmpfile_name, "w") {|f| f.puts zip.file.read(current_item.name)}
+              File.open(tmpfile_name, "w") {|f| f.puts(zip.file.read(current_item.name))}
             end
-            system %Q[#{pager} "#{tmpfile_name}"]
+            system(%Q[#{pager} "#{tmpfile_name}"])
           ensure
-            FileUtils.remove_entry_secure tmpdir if tmpdir
+            FileUtils.remove_entry_secure(tmpdir) if tmpdir
           end
         end
       end
@@ -741,7 +741,7 @@ module Rfd
     def move_cursor_by_click(y: nil, x: nil)
       if (idx = main.pane_index_at(y: y, x: x))
         row = current_page * max_items + main.maxy * idx + y - main.begy
-        move_cursor row if (row >= 0) && (row < items.size)
+        move_cursor(row) if (row >= 0) && (row < items.size)
       end
     end
 
@@ -760,11 +760,11 @@ module Rfd
     end
 
     def expand_path(path)
-      File.expand_path path.start_with?("/", "~") ? path : current_dir ? current_dir.join(path) : path
+      File.expand_path(path.start_with?("/", "~") ? path : current_dir ? current_dir.join(path) : path)
     end
 
     def load_item(path: nil, dir: nil, name: nil, stat: nil)
-      Item.new dir: dir || File.dirname(path), name: name || File.basename(path), stat: stat, window_width: main.width
+      Item.new(dir: dir || File.dirname(path), name: name || File.basename(path), stat: stat, window_width: main.width)
     end
 
     def osx?
@@ -776,7 +776,7 @@ module Rfd
     end
 
     def debug(str)
-      @debug.debug str
+      @debug.debug(str)
     end
   end
 end

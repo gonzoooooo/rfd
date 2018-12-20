@@ -9,20 +9,20 @@ module Rfd
       @begy = 5
       @current_index = 0
       @number_of_panes = 2
-      super window: Curses::Pad.new(Curses.lines - 7, Curses.cols - 2)
+      super(window: Curses::Pad.new(Curses.lines - 7, Curses.cols - 2))
     end
 
     def newpad(items)
       clear
       columns = items.size / maxy + 1
       newx = width * (((columns - 1) / @number_of_panes + 1) * @number_of_panes)
-      resize maxy, newx if newx != maxx
+      resize(maxy, newx) if newx != maxx
 
-      draw_items_to_each_pane items
+      draw_items_to_each_pane(items)
     end
 
     def display(page)
-      noutrefresh 0, (Curses.cols - 2) * page, begy, 1, begy + maxy - 1, Curses.cols - 2
+      noutrefresh(0, (Curses.cols - 2) * page, begy, 1, begy + maxy - 1, Curses.cols - 2)
     end
 
     def activate_pane(num)
@@ -42,7 +42,7 @@ module Rfd
     end
 
     def draw_item(item, current: false)
-      setpos item.index % maxy, width * @current_index
+      setpos(item.index % maxy, width * @current_index)
       attron(Curses.color_pair(item.color) | (current ? Curses::A_REVERSE : Curses::A_NORMAL)) do
         self << item.to_s
       end
@@ -51,7 +51,7 @@ module Rfd
     def draw_items_to_each_pane(items)
       items.each_slice(maxy).each.with_index do |arr, col_index|
         arr.each.with_index do |item, i|
-          setpos i, width * col_index
+          setpos(i, width * col_index)
           attron(Curses.color_pair(item.color) | Curses::A_NORMAL) { self << item.to_s }
         end
       end

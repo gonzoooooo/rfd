@@ -6,9 +6,9 @@ module Rfd
   class Window < DelegateClass(Curses::Window)
     def self.draw_borders
       [[5, Curses.stdscr.maxx, 0, 0], [5, Curses.cols - 30, 0, 0], [Curses.stdscr.maxy - 5, Curses.stdscr.maxx, 4, 0]].each do |height, width, top, left|
-        w = Curses.stdscr.subwin height, width, top, left
+        w = Curses.stdscr.subwin(height, width, top, left)
         w.bkgdset Curses.color_pair(Curses::COLOR_CYAN)
-        w.box 0, 0
+        w.box(0, 0)
         w.close
       end
     end
@@ -18,7 +18,7 @@ module Rfd
     end
 
     def writeln(row, str)
-      setpos row, 0
+      setpos(row, 0)
       clrtoeol
       self << str
       refresh

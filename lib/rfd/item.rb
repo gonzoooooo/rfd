@@ -12,23 +12,23 @@ module Rfd
       @stat = stat
       @window_width = window_width
       @marked = false
-      @stat = File.lstat self.path unless stat
+      @stat = File.lstat(self.path) unless stat
     end
 
     def path
-      @path ||= File.join @dir, @name
+      @path ||= File.join(@dir, @name)
     end
 
     def basename
-      @basename ||= File.basename name, extname
+      @basename ||= File.basename(name, extname)
     end
 
     def extname
-      @extname ||= File.extname name
+      @extname ||= File.extname(name)
     end
 
     def join(*ary)
-      File.join path, ary
+      File.join(path, ary)
     end
 
     def full_display_name
@@ -44,7 +44,7 @@ module Rfd
           n
         else
           if symlink?
-            mb_left n, @window_width - 16
+            mb_left(n, @window_width - 16)
           else
             "#{mb_left(basename, @window_width - 16 - extname.size)}…#{extname}"
           end
@@ -155,11 +155,11 @@ module Rfd
     end
 
     def target
-      File.readlink path if symlink?
+      File.readlink(path) if symlink?
     end
 
     def realpath
-      @realpath ||= File.realpath path
+      @realpath ||= File.realpath(path)
     end
 
     def toggle_mark
