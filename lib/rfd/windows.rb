@@ -5,7 +5,13 @@ require "delegate"
 module Rfd
   class Window < DelegateClass(Curses::Window)
     def self.draw_borders
-      [[5, Curses.stdscr.maxx, 0, 0], [5, Curses.cols - 30, 0, 0], [Curses.stdscr.maxy - 5, Curses.stdscr.maxx, 4, 0]].each do |height, width, top, left|
+      header_height = 5
+      header_right_width = 30
+      header_rect = [header_height, Curses.stdscr.maxx, 0, 0]
+      header_sub_rect = [header_height, Curses.cols - header_right_width, 0, 0]
+      body_rect = [Curses.stdscr.maxy - header_height, Curses.stdscr.maxx, header_height - 1, 0]
+
+      [header_rect, header_sub_rect, body_rect].each do |height, width, top, left|
         w = Curses.stdscr.subwin(height, width, top, left)
         w.bkgdset Curses.color_pair(Curses::COLOR_CYAN)
         w.box(0, 0)
