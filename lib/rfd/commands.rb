@@ -27,7 +27,7 @@ module Rfd
 
     # "f"ind the first file or directory of which name starts with the given String.
     def f
-      c = get_char and (@last_command = -> { find c }).call
+      c = get_char and (@last_command = -> { find(c) }).call
     end
 
     # Move the cursor to the top of the list.
@@ -68,7 +68,7 @@ module Rfd
     # "o"pen selected files and directories with the OS "open" command.
     def o
       if selected_items.any?
-        system("open #{selected_items.map {|i| %Q["#{i.path}"]}.join(" ")}")
+        system("open #{selected_items.map { |i| %Q["#{i.path}"] }.join(" ")}")
       elsif %w(. ..).include? current_item.name
         system(%Q[open "#{current_item.path}"])
       end
@@ -145,7 +145,7 @@ module Rfd
 
     # "f"ind the last file or directory of which name starts with the given String.
     def F
-      c = get_char and (@last_command = -> { find_reverse c }).call
+      c = get_char and (@last_command = -> { find_reverse(c) }).call
     end
 
     # Move the cursor to the top.
@@ -189,7 +189,7 @@ module Rfd
     # Mark or unmark "a"ll files and directories.
     def ctrl_a
       mark = marked_items.size != (items.size - 2)  # exclude . and ..
-      items.each {|i| i.toggle_mark unless i.marked? == mark}
+      items.each { |i| i.toggle_mark unless i.marked? == mark }
       draw_items
       draw_marked_items
       move_cursor(current_row)

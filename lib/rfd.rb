@@ -146,7 +146,7 @@ module Rfd
     #
     # . and .. will not be included.
     def selected_items
-      ((m = marked_items).any? ? m : Array(current_item)).reject {|i| %w(. ..).include? i.name}
+      ((m = marked_items).any? ? m : Array(current_item)).reject { |i| %w(. ..).include? i.name }
     end
 
     # Move the cursor to specified row.
@@ -257,7 +257,7 @@ module Rfd
     # * +user_and_group+ - user name and group name separated by : (e.g. alice, nobody:nobody, :admin)
     def chown(user_and_group)
       return unless user_and_group
-      user, group = user_and_group.split(":").map {|s| s == "" ? nil : s}
+      user, group = user_and_group.split(":").map { |s| s == "" ? nil : s }
       FileUtils.chown(user, group, selected_items.map(&:path))
       ls
     end
@@ -265,14 +265,14 @@ module Rfd
     # Fetch files from current directory or current .zip file.
     def fetch_items_from_filesystem_or_zip
       unless in_zip?
-        @items = Dir.foreach(current_dir).map {|fn|
+        @items = Dir.foreach(current_dir).map { |fn|
           load_item(dir: current_dir, name: fn)
-        }.to_a.partition {|i| %w(. ..).include? i.name}.flatten
+        }.to_a.partition { |i| %w(. ..).include? i.name }.flatten
       else
         @items = [load_item(dir: current_dir, name: ".", stat: File.stat(current_dir)),
           load_item(dir: current_dir, name: "..", stat: File.stat(File.dirname(current_dir)))]
         zf = Zip::File.new(current_dir)
-        zf.each {|entry|
+        zf.each { |entry|
           next if entry.name_is_directory?
           stat = zf.file.stat(entry.name)
           @items << load_item(dir: current_dir, name: entry.name, stat: stat)
@@ -282,13 +282,13 @@ module Rfd
 
     # Focus at the first file or directory of which name starts with the given String.
     def find(str)
-      index = items.index {|i| i.index > current_row && i.name.start_with?(str)} || items.index {|i| i.name.start_with? str}
+      index = items.index { |i| i.index > current_row && i.name.start_with?(str) } || items.index { |i| i.name.start_with? str }
       move_cursor(index) if index
     end
 
     # Focus at the last file or directory of which name starts with the given String.
     def find_reverse(str)
-      index = items.reverse.index {|i| i.index < current_row && i.name.start_with?(str)} || items.reverse.index {|i| i.name.start_with? str}
+      index = items.reverse.index { |i| i.index < current_row && i.name.start_with?(str) } || items.reverse.index { |i| i.name.start_with? str }
       move_cursor(items.size - index - 1) if index
     end
 
@@ -316,29 +316,29 @@ module Rfd
       when nil
         @items = items.shift(2) + items.partition(&:directory?).flat_map(&:sort)
       when "r"
-        @items = items.shift(2) + items.partition(&:directory?).flat_map {|arr| arr.sort.reverse}
+        @items = items.shift(2) + items.partition(&:directory?).flat_map { |arr| arr.sort.reverse }
       when "S", "s"
-        @items = items.shift(2) + items.partition(&:directory?).flat_map {|arr| arr.sort_by {|i| -i.size}}
+        @items = items.shift(2) + items.partition(&:directory?).flat_map { |arr| arr.sort_by { |i| -i.size } }
       when "Sr", "sr"
-        @items = items.shift(2) + items.partition(&:directory?).flat_map {|arr| arr.sort_by(&:size)}
+        @items = items.shift(2) + items.partition(&:directory?).flat_map { |arr| arr.sort_by(&:size) }
       when "t"
-        @items = items.shift(2) + items.partition(&:directory?).flat_map {|arr| arr.sort {|x, y| y.mtime <=> x.mtime}}
+        @items = items.shift(2) + items.partition(&:directory?).flat_map { |arr| arr.sort { |x, y| y.mtime <=> x.mtime } }
       when "tr"
-        @items = items.shift(2) + items.partition(&:directory?).flat_map {|arr| arr.sort_by(&:mtime)}
+        @items = items.shift(2) + items.partition(&:directory?).flat_map { |arr| arr.sort_by(&:mtime) }
       when "c"
-        @items = items.shift(2) + items.partition(&:directory?).flat_map {|arr| arr.sort {|x, y| y.ctime <=> x.ctime}}
+        @items = items.shift(2) + items.partition(&:directory?).flat_map { |arr| arr.sort { |x, y| y.ctime <=> x.ctime } }
       when "cr"
-        @items = items.shift(2) + items.partition(&:directory?).flat_map {|arr| arr.sort_by(&:ctime)}
+        @items = items.shift(2) + items.partition(&:directory?).flat_map { |arr| arr.sort_by(&:ctime) }
       when "u"
-        @items = items.shift(2) + items.partition(&:directory?).flat_map {|arr| arr.sort {|x, y| y.atime <=> x.atime}}
+        @items = items.shift(2) + items.partition(&:directory?).flat_map { |arr| arr.sort { |x, y| y.atime <=> x.atime } }
       when "ur"
-        @items = items.shift(2) + items.partition(&:directory?).flat_map {|arr| arr.sort_by(&:atime)}
+        @items = items.shift(2) + items.partition(&:directory?).flat_map { |arr| arr.sort_by(&:atime) }
       when "e"
-        @items = items.shift(2) + items.partition(&:directory?).flat_map {|arr| arr.sort {|x, y| y.extname <=> x.extname}}
+        @items = items.shift(2) + items.partition(&:directory?).flat_map { |arr| arr.sort { |x, y| y.extname <=> x.extname } }
       when "er"
-        @items = items.shift(2) + items.partition(&:directory?).flat_map {|arr| arr.sort_by(&:extname)}
+        @items = items.shift(2) + items.partition(&:directory?).flat_map { |arr| arr.sort_by(&:extname) }
       end
-      items.each.with_index {|item, index| item.index = index}
+      items.each.with_index { |item, index| item.index = index }
     end
 
     # Search files and directories from the current directory, and update the screen.
@@ -352,7 +352,7 @@ module Rfd
     def grep(pattern = ".*")
       regexp = Regexp.new(pattern)
       fetch_items_from_filesystem_or_zip
-      @items = items.shift(2) + items.select {|i| i.name =~ regexp}
+      @items = items.shift(2) + items.select { |i| i.name =~ regexp }
       sort_items_according_to_current_direction
       draw_items
       draw_total_items
@@ -432,7 +432,7 @@ module Rfd
         return unless ask(%Q[Trashing zip entries is not supported. Actually the files will be deleted. Are you sure want to proceed? (y/n)])
         delete
       end
-      @current_row -= selected_items.count {|i| i.index <= current_row}
+      @current_row -= selected_items.count { |i| i.index <= current_row }
       ls
     end
 
@@ -442,7 +442,7 @@ module Rfd
         FileUtils.rm_rf(selected_items.map(&:path))
       else
         Zip::File.open(current_zip) do |zip|
-          zip.select {|e| selected_items.map(&:name).include? e.to_s}.each do |entry|
+          zip.select { |e| selected_items.map(&:name).include? e.to_s }.each do |entry|
             if entry.name_is_directory?
               zip.dir.delete(entry.to_s)
             else
@@ -451,7 +451,7 @@ module Rfd
           end
         end
       end
-      @current_row -= selected_items.count {|i| i.index <= current_row}
+      @current_row -= selected_items.count { |i| i.index <= current_row }
       ls
     end
 
@@ -516,7 +516,7 @@ module Rfd
 
     # Copy selected files and directories' path into clipboard on OSX.
     def clipboard
-      IO.popen("pbcopy", "w") {|f| f << selected_items.map(&:path).join(" ")} if osx?
+      IO.popen("pbcopy", "w") { |f| f << selected_items.map(&:path).join(" ") } if osx?
     end
 
     # Archive selected files and directories into a .zip file.
@@ -542,7 +542,7 @@ module Rfd
     # Unarchive .zip and .tar.gz files within selected files and directories into current_directory.
     def unarchive
       unless in_zip?
-        zips, gzs = selected_items.partition(&:zip?).tap {|z, others| break [z, *others.partition(&:gz?)]}
+        zips, gzs = selected_items.partition(&:zip?).tap { |z, others| break [z, *others.partition(&:gz?)] }
         zips.each do |item|
           FileUtils.mkdir_p(current_dir.join(item.basename))
           Zip::File.open(item) do |zip|
@@ -567,14 +567,14 @@ module Rfd
                   FileUtils.mkdir_p(dest, :mode => entry.header.mode)
                 elsif entry.file?
                   FileUtils.mkdir_p(dest_dir)
-                  File.open(dest, "wb") {|f| f.print entry.read}
+                  File.open(dest, "wb") { |f| f.print entry.read }
                   FileUtils.chmod(entry.header.mode, dest)
                 elsif entry.header.typeflag == "2"  # symlink
                   File.symlink(entry.header.linkname, dest)
                 end
                 unless Dir.exist?(dest_dir)
                   FileUtils.mkdir_p(dest_dir)
-                  File.open(File.join(dest_dir, gz.orig_name || item.basename), "wb") {|f| f.print(gz.read)}
+                  File.open(File.join(dest_dir, gz.orig_name || item.basename), "wb") { |f| f.print(gz.read) }
                 end
               end
             end
@@ -582,7 +582,7 @@ module Rfd
         end
       else
         Zip::File.open(current_zip) do |zip|
-          zip.select {|e| selected_items.map(&:name).include?(e.to_s)}.each do |entry|
+          zip.select { |e| selected_items.map(&:name).include?(e.to_s) }.each do |entry|
             FileUtils.mkdir_p(File.join(current_zip.dir, current_zip.basename, File.dirname(entry.to_s)))
             zip.extract(entry, File.join(current_zip.dir, current_zip.basename, entry.to_s)) { true }
           end
@@ -619,12 +619,12 @@ module Rfd
     # Update the header information concerning currently marked files or directories.
     def draw_marked_items
       items = marked_items
-      header_r.draw_marked_items(count: items.size, size: items.inject(0) {|sum, i| sum += i.size})
+      header_r.draw_marked_items(count: items.size, size: items.inject(0) { |sum, i| sum += i.size} )
     end
 
     # Update the header information concerning total files and directories in the current directory.
     def draw_total_items
-      header_r.draw_total_items(count: items.size, size: items.inject(0) {|sum, i| sum += i.size})
+      header_r.draw_total_items(count: items.size, size: items.inject(0) { |sum, i| sum += i.size })
     end
 
     # Swktch on / off marking on the current file or directory.
@@ -703,7 +703,7 @@ module Rfd
               tmpdir = Dir.mktmpdir
               FileUtils.mkdir_p(File.join(tmpdir, File.dirname(current_item.name)))
               tmpfile_name = File.join(tmpdir, current_item.name)
-              File.open(tmpfile_name, "w") {|f| f.puts zip.file.read(current_item.name)}
+              File.open(tmpfile_name, "w") { |f| f.puts zip.file.read(current_item.name) }
               system(%Q[#{editor} "#{tmpfile_name}"])
               zip.add(current_item.name, tmpfile_name) { true }
             end
@@ -728,7 +728,7 @@ module Rfd
               tmpdir = Dir.mktmpdir
               FileUtils.mkdir_p(File.join(tmpdir, File.dirname(current_item.name)))
               tmpfile_name = File.join(tmpdir, current_item.name)
-              File.open(tmpfile_name, "w") {|f| f.puts(zip.file.read(current_item.name))}
+              File.open(tmpfile_name, "w") { |f| f.puts(zip.file.read(current_item.name)) }
             end
             system(%Q[#{pager} "#{tmpfile_name}"])
           ensure

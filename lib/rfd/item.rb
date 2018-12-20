@@ -191,7 +191,7 @@ module Rfd
     end
 
     def mb_size(str)
-      str.each_char.inject(0) {|l, c| l += mb_char_size(c)}
+      str.each_char.inject(0) { |l, c| l += mb_char_size(c) }
     end
 
     def mb_ljust(str, size)
