@@ -3,12 +3,12 @@ module Rfd
   module Commands
     # Change permission ("A"ttributes) of selected files and directories.
     def a
-      process_command_line preset_command: 'chmod'
+      process_command_line preset_command: "chmod"
     end
 
     # "c"opy selected files and directories.
     def c
-      process_command_line preset_command: 'cp'
+      process_command_line preset_command: "cp"
     end
 
     # Soft "d"elete (actually mv to the trash folder on OSX) selected files and directories.
@@ -57,7 +57,7 @@ module Rfd
 
     # "m"ove selected files and directories.
     def m
-      process_command_line preset_command: 'mv'
+      process_command_line preset_command: "mv"
     end
 
     # Redo the latest f or F.
@@ -68,7 +68,7 @@ module Rfd
     # "o"pen selected files and directories with the OS "open" command.
     def o
       if selected_items.any?
-        system "open #{selected_items.map {|i| %Q["#{i.path}"]}.join(' ')}"
+        system "open #{selected_items.map {|i| %Q["#{i.path}"]}.join(" ")}"
       elsif %w(. ..).include? current_item.name
         system %Q[open "#{current_item.path}"]
       end
@@ -81,7 +81,7 @@ module Rfd
 
     # "q"uit the app.
     def q
-      raise StopIteration if ask 'Are you sure want to exit? (y/n)'
+      raise StopIteration if ask "Are you sure want to exit? (y/n)"
     end
 
     # "q"uit the app!
@@ -91,17 +91,17 @@ module Rfd
 
     # "r"ename selected files and directories.
     def r
-      process_command_line preset_command: 'rename'
+      process_command_line preset_command: "rename"
     end
 
     # "s"ort displayed files and directories in the given order.
     def s
-      process_command_line preset_command: 'sort'
+      process_command_line preset_command: "sort"
     end
 
     # Create a new file, or update its timestamp if the file already exists ("t"ouch).
     def t
-      process_command_line preset_command: 'touch'
+      process_command_line preset_command: "touch"
     end
 
     # "u"narchive .zip and .tar.gz files within selected files and directories into current_directory.
@@ -116,7 +116,7 @@ module Rfd
 
     # Change o"w"ner of selected files and directories.
     def w
-      process_command_line preset_command: 'chown'
+      process_command_line preset_command: "chown"
     end
 
     # "y"ank selected file / directory names.
@@ -126,7 +126,7 @@ module Rfd
 
     # Archive selected files and directories into a "z"ip file.
     def z
-      process_command_line preset_command: 'zip'
+      process_command_line preset_command: "zip"
     end
 
     # "C"opy paths of selected files and directory to the "C"lipboard.
@@ -160,7 +160,7 @@ module Rfd
 
     # Ma"K"e a directory.
     def K
-      process_command_line preset_command: 'mkdir'
+      process_command_line preset_command: "mkdir"
     end
 
     # Move the cursor to the bottom.
@@ -183,7 +183,7 @@ module Rfd
 
     # "S"ymlink the current file or directory
     def S
-      process_command_line preset_command: 'symlink'
+      process_command_line preset_command: "symlink"
     end
 
     # Mark or unmark "a"ll files and directories.
@@ -231,7 +231,7 @@ module Rfd
     # Number of times to repeat the next command.
     (?0..?9).each do |n|
       define_method(n) do
-        @times ||= ''
+        @times ||= ""
         @times += n
       end
     end
@@ -243,12 +243,12 @@ module Rfd
 
     # Search files and directories from the current directory.
     def /
-      process_command_line preset_command: 'grep'
+      process_command_line preset_command: "grep"
     end
 
     # Change current directory (cd).
-    define_method(:'@') do
-      process_command_line preset_command: 'cd'
+    define_method(:"@") do
+      process_command_line preset_command: "cd"
     end
 
     # Execute a shell command in an external shell.
@@ -257,15 +257,15 @@ module Rfd
     end
 
     # Execute a command in the controller context.
-    define_method(:':') do
+    define_method(:":") do
       process_command_line
     end
 
     # cd into a directory, or view a file.
     def enter
-      if current_item.name == '.'  # do nothing
-      elsif current_item.name == '..'
-        cd '..'
+      if current_item.name == "."  # do nothing
+      elsif current_item.name == ".."
+        cd ".."
       elsif in_zip?
         v
       elsif current_item.directory? || current_item.zip?
@@ -284,8 +284,8 @@ module Rfd
 
     # cd to the upper hierarchy.
     def del
-      if current_dir.path != '/'
-        cd File.expand_path(current_dir.join(['..'] * times))
+      if current_dir.path != "/"
+        cd File.expand_path(current_dir.join([".."] * times))
       end
     end
 

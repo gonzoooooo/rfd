@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-require 'tempfile'
+require "tempfile"
 
 # copied from ActiveSupport 4
 module CaptureHelper

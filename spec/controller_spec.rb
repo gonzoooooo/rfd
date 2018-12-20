@@ -1,13 +1,13 @@
 # frozen_string_literal: true
-require 'spec_helper'
-require 'rfd'
+require "spec_helper"
+require "rfd"
 
 describe Rfd::Controller do
   include CaptureHelper
 
   around do |example|
     @stdout = capture(:stdout) do
-      FileUtils.cp_r File.join(__dir__, 'testdir'), tmpdir
+      FileUtils.cp_r File.join(__dir__, "testdir"), tmpdir
       @rfd = Rfd.start tmpdir
       def (@rfd.main).maxy
         3
@@ -24,26 +24,26 @@ describe Rfd::Controller do
     Curses.close_screen
   end
 
-  let(:tmpdir) { File.join __dir__, 'tmpdir' }
+  let(:tmpdir) { File.join __dir__, "tmpdir" }
   let!(:controller) { @rfd }
   subject { controller }
   let(:items) { controller.items }
 
-  describe '#spawn_panes' do
+  describe "#spawn_panes" do
     before { controller.spawn_panes 3 }
 
     subject { controller.main.instance_variable_get :@number_of_panes }
     it { should  == 3 }
   end
 
-  describe '#current_item' do
+  describe "#current_item" do
     before do
       controller.instance_variable_set :@current_row, 3
     end
     its(:current_item) { should == items[3] }
   end
 
-  describe '#marked_items' do
+  describe "#marked_items" do
     before do
       items[2].toggle_mark
       items[3].toggle_mark
@@ -51,20 +51,20 @@ describe Rfd::Controller do
     its(:marked_items) { should == [items[2], items[3]] }
   end
 
-  describe '#selected_items' do
-    context 'When no items were marked' do
-      context 'When the cursor is on . or ..' do
+  describe "#selected_items" do
+    context "When no items were marked" do
+      context "When the cursor is on . or .." do
         its(:selected_items) { should be_empty }
       end
 
-      context 'When the cursor is not on . nor ..' do
+      context "When the cursor is not on . nor .." do
         before do
           controller.instance_variable_set :@current_row, 5
         end
         its(:selected_items) { should == [items[5]] }
       end
     end
-    context 'When items were marked' do
+    context "When items were marked" do
       before do
         items[2].toggle_mark
         items[4].toggle_mark
@@ -73,20 +73,20 @@ describe Rfd::Controller do
     end
   end
 
-  describe '#move_cursor' do
-    context 'When moving to nil' do
+  describe "#move_cursor" do
+    context "When moving to nil" do
       before do
         controller.move_cursor nil
       end
       its(:current_row) { should == 0 }
     end
-    context 'When moving to a certain row' do
+    context "When moving to a certain row" do
       before do
         controller.move_cursor 2
       end
       its(:current_row) { should == 2 }
 
-      context 'When moving to the second pane' do
+      context "When moving to the second pane" do
         before do
           controller.move_cursor 5
         end
@@ -94,7 +94,7 @@ describe Rfd::Controller do
         it { should == 1 }
       end
 
-      context 'When moving to the second page' do
+      context "When moving to the second page" do
         before do
           controller.move_cursor 7
         end
@@ -103,21 +103,21 @@ describe Rfd::Controller do
     end
   end
 
-  describe '#cd' do
+  describe "#cd" do
     before do
-      controller.cd 'dir1'
+      controller.cd "dir1"
     end
-    its('current_dir.path') { should == File.join(tmpdir, 'dir1') }
+    its("current_dir.path") { should == File.join(tmpdir, "dir1") }
 
-    describe '#popd' do
+    describe "#popd" do
       before do
         controller.popd
       end
-      its('current_dir.path') { should == tmpdir }
+      its("current_dir.path") { should == tmpdir }
     end
   end
 
-  describe '#ls' do
+  describe "#ls" do
     before do
       controller.instance_variable_set :@items, []
       controller.ls
@@ -125,11 +125,11 @@ describe Rfd::Controller do
     its(:items) { should_not be_empty }
   end
 
-  describe '#sort' do
+  describe "#sort" do
     let(:item) do
-      Dir.mkdir File.join(tmpdir, '.a')
-      stat = File.lstat File.join(tmpdir, '.a')
-      Rfd::Item.new dir: tmpdir, name: '.a', stat: stat, window_width: 100
+      Dir.mkdir File.join(tmpdir, ".a")
+      stat = File.lstat File.join(tmpdir, ".a")
+      Rfd::Item.new dir: tmpdir, name: ".a", stat: stat, window_width: 100
     end
     before do
       controller.items << item
@@ -139,259 +139,259 @@ describe Rfd::Controller do
     its(:index) { should == 2 }  # . .. then next
   end
 
-  describe '#chmod' do
+  describe "#chmod" do
     let(:item) { controller.items.detect {|i| !i.directory?} }
 
-    context 'With an octet string' do
+    context "With an octet string" do
       before do
         item.toggle_mark
-        controller.chmod '666'
+        controller.chmod "666"
       end
       subject { controller.items.detect {|i| !i.directory?} }
-      its(:mode) { should == '-rw-rw-rw-' }
+      its(:mode) { should == "-rw-rw-rw-" }
     end
 
-    context 'With a decimal string' do
+    context "With a decimal string" do
       before do
         item.toggle_mark
-        controller.chmod '0666'
+        controller.chmod "0666"
       end
       subject { controller.items.detect {|i| !i.directory?} }
-      its(:mode) { should == '-rw-rw-rw-' }
+      its(:mode) { should == "-rw-rw-rw-" }
     end
 
-    context 'With a non-numeric string' do
+    context "With a non-numeric string" do
       before do
         item.toggle_mark
-        controller.chmod 'a+w'
+        controller.chmod "a+w"
       end
       subject { controller.items.detect {|i| !i.directory?} }
-      its(:mode) { should == '-rw-rw-rw-' }
+      its(:mode) { should == "-rw-rw-rw-" }
     end
   end
 
-  describe '#chown' do
+  describe "#chown" do
     let(:item) { controller.items.detect {|i| !i.directory?} }
     subject { item }
 
-    context 'With user name only' do
+    context "With user name only" do
       before do
-        expect(FileUtils).to receive(:chown).with('alice', nil, Array(item.path))
+        expect(FileUtils).to receive(:chown).with("alice", nil, Array(item.path))
         item.toggle_mark
       end
-      specify { controller.chown 'alice' }
+      specify { controller.chown "alice" }
     end
 
-    context 'With group name only' do
+    context "With group name only" do
       before do
-        expect(FileUtils).to receive(:chown).with(nil, 'admin', Array(item.path))
+        expect(FileUtils).to receive(:chown).with(nil, "admin", Array(item.path))
         item.toggle_mark
       end
-      specify { controller.chown ':admin' }
+      specify { controller.chown ":admin" }
     end
 
-    context 'With both user name and group name' do
+    context "With both user name and group name" do
       before do
-        expect(FileUtils).to receive(:chown).with('nobody', 'nobody', Array(item.path))
+        expect(FileUtils).to receive(:chown).with("nobody", "nobody", Array(item.path))
         item.toggle_mark
       end
-      specify { controller.chown 'nobody:nobody' }
+      specify { controller.chown "nobody:nobody" }
     end
   end
 
-  describe '#find' do
+  describe "#find" do
     before do
-      controller.find 'd'
+      controller.find "d"
     end
-    its('current_item.name') { should start_with('d') }
+    its("current_item.name") { should start_with("d") }
   end
 
-  describe '#find_reverse' do
+  describe "#find_reverse" do
     before do
-      controller.find_reverse 'f'
+      controller.find_reverse "f"
     end
-    its('current_item.name') { should == 'file3' }
+    its("current_item.name") { should == "file3" }
   end
 
-  describe '#grep' do
+  describe "#grep" do
     before do
-      controller.grep 'dir'
+      controller.grep "dir"
     end
     subject { controller.items[2..-1] }
     its(:size) { should be > 2 }
     it "all items' name should include 'dir'" do
-      subject.all? {|i| i.name.should include('dir')}
+      subject.all? {|i| i.name.should include("dir")}
     end
   end
 
-  describe '#cp' do
+  describe "#cp" do
     before do
-      controller.find 'file1'
-      controller.cp 'file4'
+      controller.find "file1"
+      controller.cp "file4"
     end
-    it 'should be the same file as the copy source file' do
-      File.read(File.join(tmpdir, 'file1')).should == File.read(File.join(tmpdir, 'file4'))
+    it "should be the same file as the copy source file" do
+      File.read(File.join(tmpdir, "file1")).should == File.read(File.join(tmpdir, "file4"))
     end
   end
 
-  describe '#mv' do
+  describe "#mv" do
     before do
-      controller.find 'file3'
-      controller.mv 'dir2'
+      controller.find "file3"
+      controller.mv "dir2"
     end
     subject { File }
-    it { should be_exist File.join(tmpdir, 'dir2/file3') }
+    it { should be_exist File.join(tmpdir, "dir2/file3") }
   end
 
-  describe '#rename' do
+  describe "#rename" do
     before do
-      controller.find '.file2'
+      controller.find ".file2"
       controller.toggle_mark
-      controller.find 'file3'
+      controller.find "file3"
       controller.toggle_mark
-      controller.rename 'fi/faaai'
+      controller.rename "fi/faaai"
     end
     subject { File }
-    it { should be_exist File.join(tmpdir, '.faaaile2') }
-    it { should be_exist File.join(tmpdir, 'faaaile3') }
+    it { should be_exist File.join(tmpdir, ".faaaile2") }
+    it { should be_exist File.join(tmpdir, "faaaile3") }
   end
 
-  describe '#trash' do
+  describe "#trash" do
     before do
-      controller.find 'file3'
+      controller.find "file3"
       controller.toggle_mark
       controller.trash
     end
-    it 'should be properly deleted from the current directory' do
-      controller.items.should be_none {|i| i.name == 'file3'}
+    it "should be properly deleted from the current directory" do
+      controller.items.should be_none {|i| i.name == "file3"}
     end
   end
 
-  describe '#delete' do
+  describe "#delete" do
     before do
-      controller.find 'file3'
+      controller.find "file3"
       controller.toggle_mark
-      controller.find 'dir2'
+      controller.find "dir2"
       controller.toggle_mark
       controller.delete
     end
-    it 'should be properly deleted from the current directory' do
-      controller.items.should be_none {|i| i.name == 'file3'}
-      controller.items.should be_none {|i| i.name == 'dir2'}
+    it "should be properly deleted from the current directory" do
+      controller.items.should be_none {|i| i.name == "file3"}
+      controller.items.should be_none {|i| i.name == "dir2"}
     end
   end
 
-  describe '#mkdir' do
+  describe "#mkdir" do
     before do
-      controller.mkdir 'aho'
+      controller.mkdir "aho"
     end
     subject { Dir }
-    it { should be_exist File.join(tmpdir, 'aho') }
+    it { should be_exist File.join(tmpdir, "aho") }
   end
 
-  describe '#touch' do
+  describe "#touch" do
     before do
-      controller.touch 'fuga'
+      controller.touch "fuga"
     end
     subject { File }
-    it { should be_exist File.join(tmpdir, 'fuga') }
+    it { should be_exist File.join(tmpdir, "fuga") }
   end
 
-  describe '#symlink' do
+  describe "#symlink" do
     before do
-      controller.find 'dir1'
-      controller.symlink 'aaa'
+      controller.find "dir1"
+      controller.symlink "aaa"
     end
     subject { File }
-    it { should be_symlink File.join(tmpdir, 'aaa') }
+    it { should be_symlink File.join(tmpdir, "aaa") }
   end
 
-  describe '#yank' do
+  describe "#yank" do
     before do
-      controller.find '.file1'
+      controller.find ".file1"
       controller.toggle_mark
-      controller.find 'dir3'
+      controller.find "dir3"
       controller.toggle_mark
       controller.yank
     end
-    it 'should be yanked' do
+    it "should be yanked" do
       controller.instance_variable_get(:@yanked_items).map(&:name).should =~ %w(.file1 dir3)
     end
   end
 
-  describe '#paste' do
+  describe "#paste" do
     before do
-      controller.find '.file1'
+      controller.find ".file1"
       controller.toggle_mark
-      controller.find 'dir3'
+      controller.find "dir3"
       controller.toggle_mark
       controller.yank
     end
-    context 'when the cursor is on a directory' do
+    context "when the cursor is on a directory" do
       before do
-        controller.find 'dir1'
+        controller.find "dir1"
         controller.paste
       end
       subject { File }
-      it { should be_exist File.join(tmpdir, 'dir1', '.file1') }
-      it { should be_exist File.join(tmpdir, 'dir1', 'dir3') }
+      it { should be_exist File.join(tmpdir, "dir1", ".file1") }
+      it { should be_exist File.join(tmpdir, "dir1", "dir3") }
     end
-    context 'when the cursor is on a file' do
+    context "when the cursor is on a file" do
       before do
-        controller.find 'file2'
+        controller.find "file2"
         controller.paste
       end
       subject { File }
-      it { should be_exist File.join(tmpdir, '.file1_2') }
-      it { should be_exist File.join(tmpdir, 'dir3_2') }
+      it { should be_exist File.join(tmpdir, ".file1_2") }
+      it { should be_exist File.join(tmpdir, "dir3_2") }
     end
   end
 
-  if RbConfig::CONFIG['host_os'] =~ /darwin/
-    describe '#pbcopy' do
+  if RbConfig::CONFIG["host_os"] =~ /darwin/
+    describe "#pbcopy" do
       before do
-        controller.find '.file1'
+        controller.find ".file1"
         controller.toggle_mark
-        controller.find 'dir3'
+        controller.find "dir3"
         controller.toggle_mark
         controller.clipboard
       end
-      it 'copies the selected paths into clipboard' do
-        `pbpaste`.should == "#{File.join(tmpdir, 'dir3')} #{File.join(tmpdir, '.file1')}"
+      it "copies the selected paths into clipboard" do
+        `pbpaste`.should == "#{File.join(tmpdir, "dir3")} #{File.join(tmpdir, ".file1")}"
       end
     end
   end
 
-  describe '#zip' do
+  describe "#zip" do
     before do
-      controller.find 'dir1'
-      controller.zip 'archive1'
+      controller.find "dir1"
+      controller.zip "archive1"
     end
     subject { File }
-    it { should be_exist File.join(tmpdir, 'archive1.zip') }
+    it { should be_exist File.join(tmpdir, "archive1.zip") }
   end
 
-  describe '#unarchive' do
+  describe "#unarchive" do
     before do
-      controller.find 'zip1'
+      controller.find "zip1"
       controller.toggle_mark
-      controller.find 'gz1'
+      controller.find "gz1"
       controller.toggle_mark
       controller.unarchive
     end
     subject { File }
-    it { should be_exist File.join(tmpdir, 'zip1/zip_content1') }
-    it { should be_exist File.join(tmpdir, 'zip1/zip_content_dir1/zip_content1_1') }
-    it { should be_exist File.join(tmpdir, 'gz1/gz_content1') }
-    it { should be_exist File.join(tmpdir, 'gz1/gz_content_dir1/gz_content1_1') }
+    it { should be_exist File.join(tmpdir, "zip1/zip_content1") }
+    it { should be_exist File.join(tmpdir, "zip1/zip_content_dir1/zip_content1_1") }
+    it { should be_exist File.join(tmpdir, "gz1/gz_content1") }
+    it { should be_exist File.join(tmpdir, "gz1/gz_content_dir1/gz_content1_1") }
   end
 
-  describe '#first_page? and #last_page?' do
-    context 'When on the first page' do
+  describe "#first_page? and #last_page?" do
+    context "When on the first page" do
       it { should be_first_page }
       it { should_not be_last_page }
     end
-    context 'When on the first page' do
+    context "When on the first page" do
       before do
         controller.k
       end
@@ -400,18 +400,18 @@ describe Rfd::Controller do
     end
   end
 
-  describe '#total_pages' do
+  describe "#total_pages" do
     its(:total_pages) { should == 3 }  # 15 / (3 * 2) + 1
   end
 
-  describe '#switch_page' do
+  describe "#switch_page" do
     before do
       controller.switch_page 2
     end
     its(:current_page) { should == 2 }
   end
 
-  describe '#toggle_mark' do
+  describe "#toggle_mark" do
     before do
       controller.move_cursor 10
       controller.toggle_mark
@@ -420,15 +420,15 @@ describe Rfd::Controller do
     it { should be_marked }
   end
 
-  describe 'times' do
+  describe "times" do
     subject { controller.times }
-    context 'before accepting 0-9' do
+    context "before accepting 0-9" do
       it { should == 1 }
     end
-    context 'When 0-9 were typed' do
+    context "When 0-9 were typed" do
       before do
-        controller.public_send '3'
-        controller.public_send '7'
+        controller.public_send "3"
+        controller.public_send "7"
       end
       after do
         controller.instance_variable_set :@times, nil

@@ -1,16 +1,17 @@
 # frozen_string_literal: true
-require 'curses'
-require 'fileutils'
-require 'tmpdir'
-require 'rubygems/package'
-require 'zip'
-require 'zip/filesystem'
-require_relative 'rfd/commands'
-require_relative 'rfd/item'
-require_relative 'rfd/windows'
+
+require "curses"
+require "fileutils"
+require "tmpdir"
+require "rubygems/package"
+require "zip"
+require "zip/filesystem"
+require_relative "rfd/commands"
+require_relative "rfd/item"
+require_relative "rfd/windows"
 
 module Rfd
-  VERSION = Gem.loaded_specs['rfd'].version.to_s
+  VERSION = Gem.loaded_specs["rfd"].version.to_s
 
   # :nodoc:
   def self.init_curses
@@ -32,7 +33,7 @@ module Rfd
   #
   # ==== Parameters
   # * +dir+ - The initial directory.
-  def self.start(dir = '.')
+  def self.start(dir = ".")
     init_curses
     Rfd::Window.draw_borders
     Curses.stdscr.noutrefresh
@@ -53,7 +54,7 @@ module Rfd
       @header_l = HeaderLeftWindow.new
       @header_r = HeaderRightWindow.new
       @command_line = CommandLineWindow.new
-      @debug = DebugWindow.new if ENV['DEBUG']
+      @debug = DebugWindow.new if ENV["DEBUG"]
       @direction, @dir_history, @last_command, @times, @yanked_items = nil, [], nil, nil, nil
     end
 
@@ -67,7 +68,7 @@ module Rfd
             enter
           when 27  # ESC
             q
-          when ' '  # space
+          when " "  # space
             space
           when 127  # DEL
             del
@@ -89,7 +90,7 @@ module Rfd
             if respond_to? c
               public_send c
             else
-              debug "key: #{c}" if ENV['DEBUG']
+              debug "key: #{c}" if ENV["DEBUG"]
             end
           when Curses::KEY_MOUSE
             if (mouse_event = Curses.getmouse)
@@ -101,7 +102,7 @@ module Rfd
               end
             end
           else
-            debug "key: #{c}" if ENV['DEBUG']
+            debug "key: #{c}" if ENV["DEBUG"]
           end
           Curses.doupdate if ret
           @times = nil unless number_pressed
@@ -109,7 +110,7 @@ module Rfd
           raise
         rescue => e
           command_line.show_error e.to_s
-          raise if ENV['DEBUG']
+          raise if ENV["DEBUG"]
         end
       end
     ensure
@@ -170,7 +171,7 @@ module Rfd
     end
 
     # Change the current directory.
-    def cd(dir = '~', pushd: true)
+    def cd(dir = "~", pushd: true)
       dir = load_item path: expand_path(dir) unless dir.is_a? Item
       unless dir.zip?
         Dir.chdir dir
@@ -249,7 +250,7 @@ module Rfd
     # * +user_and_group+ - user name and group name separated by : (e.g. alice, nobody:nobody, :admin)
     def chown(user_and_group)
       return unless user_and_group
-      user, group = user_and_group.split(':').map {|s| s == '' ? nil : s}
+      user, group = user_and_group.split(":").map {|s| s == "" ? nil : s}
       FileUtils.chown user, group, selected_items.map(&:path)
       ls
     end
@@ -261,8 +262,8 @@ module Rfd
           load_item dir: current_dir, name: fn
         }.to_a.partition {|i| %w(. ..).include? i.name}.flatten
       else
-        @items = [load_item(dir: current_dir, name: '.', stat: File.stat(current_dir)),
-          load_item(dir: current_dir, name: '..', stat: File.stat(File.dirname(current_dir)))]
+        @items = [load_item(dir: current_dir, name: ".", stat: File.stat(current_dir)),
+          load_item(dir: current_dir, name: "..", stat: File.stat(File.dirname(current_dir)))]
         zf = Zip::File.new current_dir
         zf.each {|entry|
           next if entry.name_is_directory?
@@ -307,27 +308,27 @@ module Rfd
       case @direction
       when nil
         @items = items.shift(2) + items.partition(&:directory?).flat_map(&:sort)
-      when 'r'
+      when "r"
         @items = items.shift(2) + items.partition(&:directory?).flat_map {|arr| arr.sort.reverse}
-      when 'S', 's'
+      when "S", "s"
         @items = items.shift(2) + items.partition(&:directory?).flat_map {|arr| arr.sort_by {|i| -i.size}}
-      when 'Sr', 'sr'
+      when "Sr", "sr"
         @items = items.shift(2) + items.partition(&:directory?).flat_map {|arr| arr.sort_by(&:size)}
-      when 't'
+      when "t"
         @items = items.shift(2) + items.partition(&:directory?).flat_map {|arr| arr.sort {|x, y| y.mtime <=> x.mtime}}
-      when 'tr'
+      when "tr"
         @items = items.shift(2) + items.partition(&:directory?).flat_map {|arr| arr.sort_by(&:mtime)}
-      when 'c'
+      when "c"
         @items = items.shift(2) + items.partition(&:directory?).flat_map {|arr| arr.sort {|x, y| y.ctime <=> x.ctime}}
-      when 'cr'
+      when "cr"
         @items = items.shift(2) + items.partition(&:directory?).flat_map {|arr| arr.sort_by(&:ctime)}
-      when 'u'
+      when "u"
         @items = items.shift(2) + items.partition(&:directory?).flat_map {|arr| arr.sort {|x, y| y.atime <=> x.atime}}
-      when 'ur'
+      when "ur"
         @items = items.shift(2) + items.partition(&:directory?).flat_map {|arr| arr.sort_by(&:atime)}
-      when 'e'
+      when "e"
         @items = items.shift(2) + items.partition(&:directory?).flat_map {|arr| arr.sort {|x, y| y.extname <=> x.extname}}
-      when 'er'
+      when "er"
         @items = items.shift(2) + items.partition(&:directory?).flat_map {|arr| arr.sort_by(&:extname)}
       end
       items.each.with_index {|item, index| item.index = index}
@@ -341,7 +342,7 @@ module Rfd
     #
     # a        : Search files that contains the letter "a" in their file name
     # .*\.pdf$ : Search PDF files
-    def grep(pattern = '.*')
+    def grep(pattern = ".*")
       regexp = Regexp.new(pattern)
       fetch_items_from_filesystem_or_zip
       @items = items.shift(2) + items.select {|i| i.name =~ regexp}
@@ -358,7 +359,7 @@ module Rfd
         src = (m = marked_items).any? ? m.map(&:path) : current_item
         FileUtils.cp_r src, expand_path(dest)
       else
-        raise 'cping multiple items in .zip is not supported.' if selected_items.size > 1
+        raise "cping multiple items in .zip is not supported." if selected_items.size > 1
         Zip::File.open(current_zip) do |zip|
           entry = zip.find_entry(selected_items.first.name).dup
           entry.name, entry.name_length = dest, dest.size
@@ -374,7 +375,7 @@ module Rfd
         src = (m = marked_items).any? ? m.map(&:path) : current_item
         FileUtils.mv src, expand_path(dest)
       else
-        raise 'mving multiple items in .zip is not supported.' if selected_items.size > 1
+        raise "mving multiple items in .zip is not supported." if selected_items.size > 1
         rename "#{selected_items.first.name}/#{dest}"
       end
       ls
@@ -385,7 +386,7 @@ module Rfd
     # ==== Parameters
     # * +pattern+ - new filename, or a shash separated Regexp like string
     def rename(pattern)
-      from, to = pattern.sub(/^\//, '').sub(/\/$/, '').split '/'
+      from, to = pattern.sub(/^\//, "").sub(/\/$/, "").split "/"
       if to.nil?
         from, to = current_item.name, from
       else
@@ -413,7 +414,7 @@ module Rfd
     def trash
       unless in_zip?
         if osx?
-          FileUtils.mv selected_items.map(&:path), File.expand_path('~/.Trash/')
+          FileUtils.mv selected_items.map(&:path), File.expand_path("~/.Trash/")
         else
           #TODO support other OS
           FileUtils.rm_rf selected_items.map(&:path)
@@ -463,7 +464,7 @@ module Rfd
         FileUtils.touch current_dir.join(filename)
       else
         Zip::File.open(current_zip) do |zip|
-          # zip.file.open(filename, 'w') {|_f| }  #HAXX this code creates an unneeded temporary file
+          # zip.file.open(filename, "w") {|_f| }  #HAXX this code creates an unneeded temporary file
           zip.instance_variable_get(:@entry_set) << Zip::Entry.new(current_zip, filename)
         end
       end
@@ -506,20 +507,20 @@ module Rfd
 
     # Copy selected files and directories' path into clipboard on OSX.
     def clipboard
-      IO.popen('pbcopy', 'w') {|f| f << selected_items.map(&:path).join(' ')} if osx?
+      IO.popen("pbcopy", "w") {|f| f << selected_items.map(&:path).join(" ")} if osx?
     end
 
     # Archive selected files and directories into a .zip file.
     def zip(zipfile_name)
       return unless zipfile_name
-      zipfile_name += '.zip' unless zipfile_name.end_with? '.zip'
+      zipfile_name += ".zip" unless zipfile_name.end_with? ".zip"
 
       Zip::File.open(zipfile_name, Zip::File::CREATE) do |zipfile|
         selected_items.each do |item|
           next if item.symlink?
           if item.directory?
-            Dir[item.join('**/**')].each do |file|
-              zipfile.add file.sub("#{current_dir}/", ''), file
+            Dir[item.join("**/**")].each do |file|
+              zipfile.add file.sub("#{current_dir}/", ""), file
             end
           else
             zipfile.add item.name, item
@@ -545,10 +546,10 @@ module Rfd
         gzs.each do |item|
           Zlib::GzipReader.open(item) do |gz|
             Gem::Package::TarReader.new(gz) do |tar|
-              dest_dir = current_dir.join (gz.orig_name || item.basename).sub(/\.tar$/, '')
+              dest_dir = current_dir.join (gz.orig_name || item.basename).sub(/\.tar$/, "")
               tar.each do |entry|
                 dest = nil
-                if entry.full_name == '././@LongLink'
+                if entry.full_name == "././@LongLink"
                   dest = File.join dest_dir, entry.read.strip
                   next
                 end
@@ -557,14 +558,14 @@ module Rfd
                   FileUtils.mkdir_p dest, :mode => entry.header.mode
                 elsif entry.file?
                   FileUtils.mkdir_p dest_dir
-                  File.open(dest, 'wb') {|f| f.print entry.read}
+                  File.open(dest, "wb") {|f| f.print entry.read}
                   FileUtils.chmod entry.header.mode, dest
-                elsif entry.header.typeflag == '2'  # symlink
+                elsif entry.header.typeflag == "2"  # symlink
                   File.symlink entry.header.linkname, dest
                 end
                 unless Dir.exist? dest_dir
                   FileUtils.mkdir_p dest_dir
-                  File.open(File.join(dest_dir, gz.orig_name || item.basename), 'wb') {|f| f.print gz.read}
+                  File.open(File.join(dest_dir, gz.orig_name || item.basename), "wb") {|f| f.print gz.read}
                 end
               end
             end
@@ -639,9 +640,9 @@ module Rfd
     # ==== Parameters
     # * +preset_command+ - A command that would be displayed at the command line before user input.
     def process_command_line(preset_command: nil)
-      prompt = preset_command ? ":#{preset_command} " : ':'
+      prompt = preset_command ? ":#{preset_command} " : ":"
       command_line.set_prompt prompt
-      cmd, *args = command_line.get_command(prompt: prompt).split(' ')
+      cmd, *args = command_line.get_command(prompt: prompt).split(" ")
       if cmd && !cmd.empty? && respond_to?(cmd)
         ret = self.public_send cmd, *args
         clear_command_line
@@ -653,8 +654,8 @@ module Rfd
 
     # Accept user input, and directly execute it in an external shell.
     def process_shell_command
-      command_line.set_prompt ':!'
-      cmd = command_line.get_command(prompt: ':!')[1..-1]
+      command_line.set_prompt ":!"
+      cmd = command_line.get_command(prompt: ":!")[1..-1]
       execute_external_command pause: true do
         system cmd
       end
@@ -668,21 +669,21 @@ module Rfd
     #
     # ==== Parameters
     # * +prompt+ - Prompt message
-    def ask(prompt = '(y/n)')
+    def ask(prompt = "(y/n)")
       command_line.set_prompt prompt
       command_line.refresh
       while (c = Curses.getch)
         next unless [?N, ?Y, ?n, ?y, 3, 27] .include? c  # N, Y, n, y, ^c, esc
         command_line.clear
         command_line.noutrefresh
-        break (c == 'y') || (c == 'Y')
+        break (c == "y") || (c == "Y")
       end
     end
 
     # Open current file or directory with the editor.
     def edit
       execute_external_command do
-        editor = ENV['EDITOR'] || 'vim'
+        editor = ENV["EDITOR"] || "vim"
         unless in_zip?
           system %Q[#{editor} "#{current_item.path}"]
         else
@@ -692,7 +693,7 @@ module Rfd
               tmpdir = Dir.mktmpdir
               FileUtils.mkdir_p File.join(tmpdir, File.dirname(current_item.name))
               tmpfile_name = File.join(tmpdir, current_item.name)
-              File.open(tmpfile_name, 'w') {|f| f.puts zip.file.read(current_item.name)}
+              File.open(tmpfile_name, "w") {|f| f.puts zip.file.read(current_item.name)}
               system %Q[#{editor} "#{tmpfile_name}"]
               zip.add(current_item.name, tmpfile_name) { true }
             end
@@ -706,7 +707,7 @@ module Rfd
 
     # Open current file or directory with the viewer.
     def view
-      pager = ENV['PAGER'] || 'less'
+      pager = ENV["PAGER"] || "less"
       execute_external_command do
         unless in_zip?
           system %Q[#{pager} "#{current_item.path}"]
@@ -717,7 +718,7 @@ module Rfd
               tmpdir = Dir.mktmpdir
               FileUtils.mkdir_p File.join(tmpdir, File.dirname(current_item.name))
               tmpfile_name = File.join(tmpdir, current_item.name)
-              File.open(tmpfile_name, 'w') {|f| f.puts zip.file.read(current_item.name)}
+              File.open(tmpfile_name, "w") {|f| f.puts zip.file.read(current_item.name)}
             end
             system %Q[#{pager} "#{tmpfile_name}"]
           ensure
@@ -749,7 +750,7 @@ module Rfd
     end
 
     def expand_path(path)
-      File.expand_path path.start_with?('/', '~') ? path : current_dir ? current_dir.join(path) : path
+      File.expand_path path.start_with?("/", "~") ? path : current_dir ? current_dir.join(path) : path
     end
 
     def load_item(path: nil, dir: nil, name: nil, stat: nil)
@@ -757,7 +758,7 @@ module Rfd
     end
 
     def osx?
-      @_osx ||= RbConfig::CONFIG['host_os'] =~ /darwin/
+      @_osx ||= RbConfig::CONFIG["host_os"] =~ /darwin/
     end
 
     def in_zip?

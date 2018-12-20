@@ -66,36 +66,36 @@ module Rfd
     end
 
     def size_or_dir
-      directory? ? '<DIR>' : size.to_s
+      directory? ? "<DIR>" : size.to_s
     end
 
     def atime
-      stat.atime.strftime('%Y-%m-%d %H:%M:%S')
+      stat.atime.strftime("%Y-%m-%d %H:%M:%S")
     end
 
     def ctime
-      stat.ctime.strftime('%Y-%m-%d %H:%M:%S')
+      stat.ctime.strftime("%Y-%m-%d %H:%M:%S")
     end
 
     def mtime
-      stat.mtime.strftime('%Y-%m-%d %H:%M:%S')
+      stat.mtime.strftime("%Y-%m-%d %H:%M:%S")
     end
 
     def mode
       @mode ||= begin
         m = stat.mode
-        ft = directory? ? 'd' : symlink? ? 'l' : '-'
+        ft = directory? ? "d" : symlink? ? "l" : "-"
         ret = [(m & 0700) / 64, (m & 070) / 8, m & 07].inject(ft) do |str, s|
-          str += "#{s & 4 == 4 ? 'r' : '-'}#{s & 2 == 2 ? 'w' : '-'}#{s & 1 == 1 ? 'x' : '-'}"
+          str += "#{s & 4 == 4 ? "r" : "-"}#{s & 2 == 2 ? "w" : "-"}#{s & 1 == 1 ? "x" : "-"}"
         end
         if m & 04000 != 0
-          ret[3] = directory? ? 's' : 'S'
+          ret[3] = directory? ? "s" : "S"
         end
         if m & 02000 != 0
-          ret[6] = directory? ? 's' : 'S'
+          ret[6] = directory? ? "s" : "S"
         end
         if m & 01000 == 512
-          ret[-1] = directory? ? 't' : 'T'
+          ret[-1] = directory? ? "t" : "T"
         end
         ret
       end
@@ -118,7 +118,7 @@ module Rfd
     end
 
     def hidden?
-      name.start_with?('.') && (name != '.') && (name != '..')
+      name.start_with?(".") && (name != ".") && (name != "..")
     end
 
     def executable?
@@ -130,7 +130,7 @@ module Rfd
         if directory?
           false
         else
-          File.binread(realpath, 4).unpack('V').first == 0x04034b50
+          File.binread(realpath, 4).unpack("V").first == 0x04034b50
         end
       rescue
         false
@@ -142,7 +142,7 @@ module Rfd
         if directory?
           false
         else
-          File.binread(realpath, 2).unpack('n').first == 0x1f8b
+          File.binread(realpath, 2).unpack("n").first == 0x1f8b
         end
       rescue
         false
@@ -169,7 +169,7 @@ module Rfd
     end
 
     def current_mark
-      marked? ? '*' : ' '
+      marked? ? "*" : " "
     end
 
     def mb_left(str, size)
@@ -182,7 +182,7 @@ module Rfd
     end
 
     def mb_char_size(c)
-      c == '…' ? 1 : c.bytesize == 1 ? 1 : 2
+      c == "…" ? 1 : c.bytesize == 1 ? 1 : 2
     end
 
     def mb_size(str)
@@ -190,7 +190,7 @@ module Rfd
     end
 
     def mb_ljust(str, size)
-      "#{str}#{' ' * [0, size - mb_size(str)].max}"
+      "#{str}#{" " * [0, size - mb_size(str)].max}"
     end
 
     def to_s
