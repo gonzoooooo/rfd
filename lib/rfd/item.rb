@@ -6,7 +6,12 @@ module Rfd
     attr_accessor :index
 
     def initialize(path: nil, dir: nil, name: nil, stat: nil, window_width: nil)
-      @path, @dir, @name, @stat, @window_width, @marked = path, dir || File.dirname(path), name || File.basename(path), stat, window_width, false
+      @path = path
+      @dir = dir || File.dirname(path)
+      @name = name || File.basename(path)
+      @stat = stat
+      @window_width = window_width
+      @marked = false
       @stat = File.lstat self.path unless stat
     end
 

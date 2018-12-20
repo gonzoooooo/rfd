@@ -6,7 +6,9 @@ module Rfd
     attr_writer :number_of_panes
 
     def initialize
-      @begy, @current_index, @number_of_panes = 5, 0, 2
+      @begy = 5
+      @current_index = 0
+      @number_of_panes = 2
       super window: Curses::Pad.new(Curses.lines - 7, Curses.cols - 2)
     end
 

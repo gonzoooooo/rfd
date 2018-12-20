@@ -55,7 +55,11 @@ module Rfd
       @header_r = HeaderRightWindow.new
       @command_line = CommandLineWindow.new
       @debug = DebugWindow.new if ENV["DEBUG"]
-      @direction, @dir_history, @last_command, @times, @yanked_items = nil, [], nil, nil, nil
+      @direction = nil
+      @dir_history = []
+      @last_command = nil
+      @times = nil
+      @yanked_items = nil
     end
 
     # The main loop.
@@ -180,7 +184,9 @@ module Rfd
         @current_zip = dir
       end
       @dir_history << current_dir if current_dir && pushd
-      @current_dir, @current_page, @current_row = dir, 0, nil
+      @current_dir = dir
+      @current_page = 0
+      @current_row = nil
       main.activate_pane 0
       ls
       @current_dir
@@ -223,7 +229,8 @@ module Rfd
     #                 e     : order by extname
     #                 er    : reverse order by extname
     def sort(direction = nil)
-      @direction, @current_page = direction, 0
+      @direction = direction
+      @current_page = 0
       sort_items_according_to_current_direction
       switch_page 0
       move_cursor 0
@@ -362,7 +369,8 @@ module Rfd
         raise "cping multiple items in .zip is not supported." if selected_items.size > 1
         Zip::File.open(current_zip) do |zip|
           entry = zip.find_entry(selected_items.first.name).dup
-          entry.name, entry.name_length = dest, dest.size
+          entry.name = dest
+          entry.name_length = dest.size
           zip.instance_variable_get(:@entry_set) << entry
         end
       end
@@ -388,7 +396,8 @@ module Rfd
     def rename(pattern)
       from, to = pattern.sub(/^\//, "").sub(/\/$/, "").split "/"
       if to.nil?
-        from, to = current_item.name, from
+        from = current_item.name
+        to = from
       else
         from = Regexp.new from
       end
@@ -688,7 +697,8 @@ module Rfd
           system %Q[#{editor} "#{current_item.path}"]
         else
           begin
-            tmpdir, tmpfile_name = nil
+            tmpdir = nil
+            tmpfile_name = nil
             Zip::File.open(current_zip) do |zip|
               tmpdir = Dir.mktmpdir
               FileUtils.mkdir_p File.join(tmpdir, File.dirname(current_item.name))
