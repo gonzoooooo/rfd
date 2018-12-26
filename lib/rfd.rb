@@ -242,6 +242,7 @@ module Rfd
     # * +mode+ - Unix chmod string (e.g. +w, g-r, 755, 0644)
     def chmod(mode = nil)
       return unless mode
+
       begin
         Integer mode
         mode = Integer mode.size == 3 ? "0#{mode}" : mode
@@ -257,6 +258,7 @@ module Rfd
     # * +user_and_group+ - user name and group name separated by : (e.g. alice, nobody:nobody, :admin)
     def chown(user_and_group)
       return unless user_and_group
+
       user, group = user_and_group.split(":").map { |s| s == "" ? nil : s }
       FileUtils.chown(user, group, selected_items.map(&:path))
       ls
@@ -367,6 +369,7 @@ module Rfd
         FileUtils.cp_r(src, expand_path(dest))
       else
         raise "cping multiple items in .zip is not supported." if selected_items.size > 1
+
         Zip::File.open(current_zip) do |zip|
           entry = zip.find_entry(selected_items.first.name).dup
           entry.name = dest
@@ -522,11 +525,13 @@ module Rfd
     # Archive selected files and directories into a .zip file.
     def zip(zipfile_name)
       return unless zipfile_name
+
       zipfile_name += ".zip" unless zipfile_name.end_with? ".zip"
 
       Zip::File.open(zipfile_name, Zip::File::CREATE) do |zipfile|
         selected_items.each do |item|
           next if item.symlink?
+
           if item.directory?
             Dir[item.join("**/**")].each do |file|
               zipfile.add(file.sub("#{current_dir}/", ""), file)
