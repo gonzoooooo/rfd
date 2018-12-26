@@ -664,6 +664,8 @@ module Rfd
       end
     rescue Interrupt
       clear_command_line
+    rescue ArgumentError
+      clear_command_line
     end
 
     # Accept user input, and directly execute it in an external shell.
