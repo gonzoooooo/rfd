@@ -70,8 +70,24 @@ module Rfd
       directory? ? 0 : stat.size
     end
 
+    def size_with_unit
+      return "0" if directory?
+
+      if size < 1000
+        "#{size} bytes"
+      elsif size < 1_000_000
+        "%.1f KB" % (size / 1000.to_f)
+      elsif size < 1_000_000_000
+        "%.1f MB" % (size / 1000_000.to_f)
+      elsif size < 1_000_000_000_000
+        "%.1f GB" % (size / 1000_000_000.to_f)
+      elsif size < 1_000_000_000_000_000
+        "%.1f TB" % (size / 1000_000_000_000.to_f)
+      end
+    end
+
     def size_or_dir
-      directory? ? "<DIR>" : size.to_s
+      directory? ? "<DIR>" : size_with_unit
     end
 
     def atime
