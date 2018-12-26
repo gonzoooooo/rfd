@@ -12,7 +12,7 @@ module Rfd
       end
     end
 
-    def getstr_with_echo
+    def getstr_with_echo(startx)
       str = "".dup
       loop do
         case (c = Curses.getch)
@@ -20,6 +20,13 @@ module Rfd
           raise Interrupt
         when 10, 13
           break
+        when 127
+          next unless str.size > 0
+
+          str.chop!
+          setpos(0, startx + str.size)
+          delch
+          refresh
         else
           self << c
           refresh
@@ -32,7 +39,7 @@ module Rfd
     def get_command(prompt: nil)
       startx = prompt ? prompt.size : 1
       setpos(0, startx)
-      s = getstr_with_echo
+      s = getstr_with_echo(startx)
       "#{prompt[1..-1] if prompt}#{s.strip}"
     end
 
