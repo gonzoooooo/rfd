@@ -234,6 +234,7 @@ module Rfd
       sort_items_according_to_current_direction
       switch_page(0)
       move_cursor(0)
+      ls
     end
 
     # Change the file permission of the selected files and directories.
