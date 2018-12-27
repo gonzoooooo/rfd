@@ -40,13 +40,13 @@ module Rfd
     def display_name
       @display_name ||= begin
         n = full_display_name
-        if mb_size(n) <= @window_width - 15
+        if mb_size(n) <= display_name_width
           n
         else
           if symlink?
-            mb_left(n, @window_width - 16)
+            mb_left(n, display_name_width)
           else
-            "#{mb_left(basename, @window_width - 16 - extname.size)}…#{extname}"
+            "#{mb_left(basename, display_name_width - extname.size)}…#{extname}"
           end
         end
       end
@@ -215,7 +215,11 @@ module Rfd
     end
 
     def to_s
-      "#{current_mark}#{mb_ljust(display_name, @window_width - 15)}#{size_or_dir.rjust(13)}"
+      if display_name_width > 0
+        "#{current_mark}#{mb_ljust(display_name, display_name_width)}#{size_or_dir.rjust(13)}  #{mtime}"
+      else
+        "#{current_mark}#{mb_ljust(display_name, @window_width - 15)}#{size_or_dir.rjust(13)}"
+      end
     end
 
     def to_str
@@ -231,5 +235,18 @@ module Rfd
         name <=> o.name
       end
     end
+
+    private
+
+      def display_name_width
+        current_mark_width = 1
+        size_or_dir_width = 13
+        margin_between_size_or_dir_and_mtime = 2
+        mtime_width = 19
+        right_margin = 1
+
+        @window_width - (current_mark_width + size_or_dir_width + margin_between_size_or_dir_and_mtime + mtime_width + right_margin)
+      end
+
   end
 end
