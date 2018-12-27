@@ -1,4 +1,7 @@
 # frozen_string_literal: true
+
+require "nkf"
+
 module Rfd
   class Item
     include Comparable
@@ -46,7 +49,7 @@ module Rfd
           if symlink?
             mb_left(n, display_name_width)
           else
-            "#{mb_left(basename, display_name_width - extname.size)}…#{extname}"
+            "#{mb_left(basename, display_name_width - extname.size)}~#{extname}"
           end
         end
       end
@@ -195,15 +198,23 @@ module Rfd
 
     def mb_left(str, size)
       len = 0
-      index = str.each_char.with_index do |c, i|
+      index = 0
+
+      str.each_char.with_index do |c, i|
         break i if len + mb_char_size(c) > size
-        len += mb_size c
+
+        index += 1
+        len += mb_char_size(c)
       end
+
       str[0, index]
     end
 
     def mb_char_size(c)
-      c == "…" ? 1 : c.bytesize == 1 ? 1 : 2
+      return 1 if c.bytesize == 1
+      return 1 if c.match?(/[ｦ-ﾟ]/) # 半角カタカナは 1 とする
+
+      2
     end
 
     def mb_size(str)

@@ -170,6 +170,8 @@ module Rfd
       main.draw_item(item, current: true)
       main.display(current_page)
 
+      debug(item.mb_size(item.display_name).to_s) if ENV["DEBUG"]
+
       header_l.draw_current_file_info(item)
       @current_row
     end
@@ -786,7 +788,12 @@ module Rfd
     end
 
     def load_item(path: nil, dir: nil, name: nil, stat: nil)
-      Item.new(dir: dir || File.dirname(path), name: name || File.basename(path), stat: stat, window_width: main.width)
+      _dir = dir || File.dirname(path)
+      _dir = NKF.nkf("--ic=UTF-8-MAC --oc=UTF-8 -x", _dir) if osx?
+      _name = name || File.basename(path)
+      _name = NKF.nkf("--ic=UTF-8-MAC --oc=UTF-8 -x", _name) if osx?
+
+      Item.new(dir: _dir, name: _name, stat: stat, window_width: main.width)
     end
 
     def osx?
