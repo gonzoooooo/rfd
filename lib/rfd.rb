@@ -700,50 +700,64 @@ module Rfd
     # Open current file or directory with the editor.
     def edit
       execute_external_command do
-        editor = ENV["EDITOR"] || "vim"
-        unless in_zip?
-          system %Q[#{editor} "#{current_item.path}"]
-        else
-          begin
-            tmpdir = nil
-            tmpfile_name = nil
-            Zip::File.open(current_zip) do |zip|
-              tmpdir = Dir.mktmpdir
-              FileUtils.mkdir_p(File.join(tmpdir, File.dirname(current_item.name)))
-              tmpfile_name = File.join(tmpdir, current_item.name)
-              File.open(tmpfile_name, "w") { |f| f.puts zip.file.read(current_item.name) }
-              system(%Q[#{editor} "#{tmpfile_name}"])
-              zip.add(current_item.name, tmpfile_name) { true }
-            end
-            ls
-          ensure
-            FileUtils.remove_entry_secure(tmpdir) if tmpdir
-          end
-        end
+        in_zip? ? edit_zip : edit_item(current_item.path)
       end
+    end
+
+    def editor
+      @_editor ||= ENV["EDITOR"] || "vim"
+      @_editor
+    end
+
+    def edit_item(item_path)
+      system(%Q[#{editor} "#{item_path}"])
+    end
+
+    def edit_zip
+      tmpdir = nil
+
+      Zip::File.open(current_zip) do |zip|
+        tmpdir = Dir.mktmpdir
+        FileUtils.mkdir_p(File.join(tmpdir, File.dirname(current_item.name)))
+        tmpfile_name = File.join(tmpdir, current_item.name)
+        File.open(tmpfile_name, "w") { |f| f.puts zip.file.read(current_item.name) }
+        edit_item(tmpfile_name)
+        zip.add(current_item.name, tmpfile_name) { true }
+      end
+      ls
+    ensure
+      FileUtils.remove_entry_secure(tmpdir) if tmpdir
     end
 
     # Open current file or directory with the viewer.
     def view
-      pager = ENV["PAGER"] || "less"
       execute_external_command do
-        unless in_zip?
-          system(%Q[#{pager} "#{current_item.path}"])
-        else
-          begin
-            tmpdir, tmpfile_name = nil
-            Zip::File.open(current_zip) do |zip|
-              tmpdir = Dir.mktmpdir
-              FileUtils.mkdir_p(File.join(tmpdir, File.dirname(current_item.name)))
-              tmpfile_name = File.join(tmpdir, current_item.name)
-              File.open(tmpfile_name, "w") { |f| f.puts(zip.file.read(current_item.name)) }
-            end
-            system(%Q[#{pager} "#{tmpfile_name}"])
-          ensure
-            FileUtils.remove_entry_secure(tmpdir) if tmpdir
-          end
-        end
+        in_zip? ? view_zip : view_item(current_item.path)
       end
+    end
+
+    def pager
+      @_pager ||= ENV["PAGER"] || "less"
+      @_pager
+    end
+
+    def view_item(item_path)
+      system(%Q[#{pager} "#{item_path}"])
+    end
+
+    def view_zip
+      tmpdir = nil
+      tmpfile_name = nil
+
+      Zip::File.open(current_zip) do |zip|
+        tmpdir = Dir.mktmpdir
+        FileUtils.mkdir_p(File.join(tmpdir, File.dirname(current_item.name)))
+        tmpfile_name = File.join(tmpdir, current_item.name)
+        File.open(tmpfile_name, "w") { |f| f.puts(zip.file.read(current_item.name)) }
+      end
+      view_item(tmpfile_name)
+    ensure
+      FileUtils.remove_entry_secure(tmpdir) if tmpdir
     end
 
     def move_cursor_by_click(y: nil, x: nil)
