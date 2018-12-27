@@ -10,9 +10,10 @@ module Rfd
       attron(Curses.color_pair(Curses::COLOR_WHITE) | Curses::A_BOLD) do
         writeln(0, str)
       end
+      draw_cursor_with_row(str.size)
     end
 
-    def getstr_with_echo(startx)
+    def getstr_with_echo(prompt, startx)
       str = "".dup
       loop do
         case (c = Curses.getch)
@@ -28,9 +29,12 @@ module Rfd
           delch
           refresh
         else
-          self << c
-          refresh
           str << c
+          attron(Curses.color_pair(Curses::COLOR_WHITE) | Curses::A_BOLD) do
+            writeln(0, prompt + str)
+          end
+          draw_cursor_with_row(str.size)
+          refresh
         end
       end
       str
@@ -39,7 +43,7 @@ module Rfd
     def get_command(prompt: nil)
       startx = prompt ? prompt.size : 1
       setpos(0, startx)
-      s = getstr_with_echo(startx)
+      s = getstr_with_echo((prompt || ""), startx)
       "#{prompt[1..-1] if prompt}#{s.strip}"
     end
 
@@ -49,5 +53,13 @@ module Rfd
       end
       noutrefresh
     end
+
+    private
+
+      def draw_cursor_with_row(row)
+        attron(Curses.color_pair(Curses::COLOR_WHITE) | Curses::A_REVERSE) do
+          writeln(row, " ")
+        end
+      end
   end
 end
